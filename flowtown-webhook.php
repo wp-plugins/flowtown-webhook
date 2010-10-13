@@ -7,13 +7,13 @@
  * @package dtLabs
  * 
  * @author digital-telepathy
- * @version 1.2
+ * @version 1.2.1
  */
 /*
 Plugin Name: Flowtown Webhook
 Plugin URI: http://www.dtelepathy.com/
 Description: Automatically send a user to a Flowtown group when they sign up
-Version: 1.2
+Version: 1.2.1
 Author: digital-telepathy
 Author URI: http://www.dtelepathy.com
 License: GPL2
@@ -36,7 +36,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 class FlowtownWebhook {
-    var $version = 1.2;
+    var $version = '1.2.1';
     var $namespace = 'flowtown';
     var $longname = 'Flowtown Webhook';
     var $defaults = array(
@@ -92,7 +92,6 @@ class FlowtownWebhook {
                 $show_message = true;
             }
         }
-        
         ?>
         <div class="wrap">
             <h2><?php echo $this->longname; ?> Options</h2>
@@ -141,6 +140,11 @@ class FlowtownWebhook {
         <?php
     }
     
+    function api_url( $email ) {
+        $url = $this->url . '?api_key=' . $this->handshake . '&emails=' . urlencode( $email );
+        return $url;
+    }
+    
     function plugin_settings( $links ) {
 		$settings_link = '<a href="' . admin_url( 'options-general.php' ) . '?page=' . $this->namespace . '">' . __( 'Settings', $this->namespace ) . '</a>';
 		array_unshift( $links, $settings_link );
@@ -154,7 +158,7 @@ class FlowtownWebhook {
         
         $user = get_userdata( $user_ID );
         
-        wp_remote_fopen( $this->url . '?api_key=' . $this->handshake . '&emails=' . $user->user_email );
+        wp_remote_fopen( $this->api_url( $user->user_email ) );
     }
     
     function wp_insert_comment( $id, $comment ) {
@@ -169,7 +173,7 @@ class FlowtownWebhook {
                 }
             }
             if( $valid === true ) {
-                wp_remote_fopen( $this->url . '?api_key=' . $this->handshake . '&emails=' . $comment->comment_author_email );
+                wp_remote_fopen( $this->api_url( $comment->comment_author_email ) );
             }
         }
     }
@@ -177,7 +181,7 @@ class FlowtownWebhook {
     function wp_set_comment_status( $id, $status ) {
         $comment = get_comment( $id );
         if( in_array( $status, array( 'approve', '1' ) ) ) {
-            wp_remote_fopen( $this->url . '?api_key=' . $this->handshake . '&emails=' . $comment->comment_author_email );
+            wp_remote_fopen( $this->api_url( $comment->comment_author_email ) );
         }
     }
 }

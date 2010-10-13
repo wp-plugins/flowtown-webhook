@@ -33,18 +33,24 @@ Yes, but with some caveats. There should be no problem with Intense Debate since
 
 == Upgrade Notice ==
 
-= 1.2 =
+= 1.2.1 =
+* Added better parsing for email to accommodate for "." and "+" characters.
+
+= 1.2.0 =
 * Added ability to only send approved commenters to Flowtown
 
-= 1.1 =
+= 1.1.0 =
 * Ability to add commenters to your Flowtown account added
 
 == Changelog ==
 
-= 1.2 =
+= 1.2.1 =
+* Added better parsing for email to accommodate for "." and "+" characters.
+
+= 1.2.0 =
 * Added ability to only send approved commenters to Flowtown (spam commenters will always be filtered out). This is a user specifiable option.
 
-= 1.1 =
+= 1.1.0 =
 * Added ability to send blog commenters to Flowtown
 
 = 1.0 = 
