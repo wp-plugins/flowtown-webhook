@@ -7,13 +7,13 @@
  * @package dtLabs
  * 
  * @author digital-telepathy
- * @version 1.1
+ * @version 1.2
  */
 /*
 Plugin Name: Flowtown Webhook
 Plugin URI: http://www.dtelepathy.com/
 Description: Automatically send a user to a Flowtown group when they sign up
-Version: 1.1
+Version: 1.2
 Author: digital-telepathy
 Author URI: http://www.dtelepathy.com
 License: GPL2
@@ -36,23 +36,29 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 class FlowtownWebhook {
-    var $version = 1.0;
+    var $version = 1.2;
     var $namespace = 'flowtown';
     var $longname = 'Flowtown Webhook';
+    var $defaults = array(
+        'only_submit_approved' => true
+    );
     
     function __construct() {
         $this->url_option_name = $this->namespace . '_url';
         $this->handshake_option_name = $this->namespace . '_handshake';
         $this->send_commenters_option_name = $this->namespace . '_send_commenters';
+        $this->options_name = $this->namespace . '_options';
         
         $this->url = get_option( $this->url_option_name, false );
         $this->handshake = get_option( $this->handshake_option_name, false );
         $this->send_commenters = get_option( $this->send_commenters_option_name, false );
+        $this->options = get_option( $this->options_name, $this->defaults );
         
         add_action( 'user_register', array( &$this, 'user_register' ), 10, 1 );
         add_action( 'admin_menu', array( &$this, 'admin_menu' ) );
 		add_action( 'plugin_action_links_' . basename( dirname( __FILE__ ) ) . '/' . basename( __FILE__ ), array( &$this, 'plugin_settings' ), 10, 4 );
         add_action( 'wp_insert_comment', array( &$this, 'wp_insert_comment' ), 10, 2 );
+        add_action( 'wp_set_comment_status', array( &$this, 'wp_set_comment_status' ), 10, 2 );
     }
     
     function admin_menu() {
@@ -73,9 +79,15 @@ class FlowtownWebhook {
                 update_option( $this->handshake_option_name, $_POST[$this->handshake_option_name] );
                 update_option( $this->send_commenters_option_name, $_POST[$this->send_commenters_option_name] );
                 
+                $options = array(
+                    'only_submit_approved' => (boolean) isset( $_POST[$this->options_name]['only_submit_approved'] ) ? true : false
+                );
+                update_option( $this->options_name, $options );
+                
                 $this->url = get_option( $this->url_option_name, false );
                 $this->handshake = get_option( $this->handshake_option_name, false );
                 $this->send_commenters = get_option( $this->send_commenters_option_name, false );
+                $this->options = get_option( $this->options_name, $this->defaults );
                 
                 $show_message = true;
             }
@@ -111,6 +123,10 @@ class FlowtownWebhook {
                                 <label>
                                     <input type="checkbox" name="<?php echo $this->send_commenters_option_name; ?>" value="1"<?php echo $this->send_commenters == '1' ? ' checked="checked"' : ''; ?> />
                                     Send blog comment authors to this Flowtown group
+                                </label><br />
+                                <label>
+                                    <input type="checkbox" name="<?php echo $this->options_name; ?>[only_submit_approved]" value="1"<?php echo $this->options['only_submit_approved'] == true ? ' checked="checked"' : ''; ?> />
+                                    Only submit approved commenters to Flowtown (spam commenters will always be filtered out)
                                 </label>
                             </td>
                         </tr>
@@ -143,9 +159,25 @@ class FlowtownWebhook {
     
     function wp_insert_comment( $id, $comment ) {
         if( $this->send_commenters == '1' ) {
-            if( $comment->comment_approved != 'spam' ) {
+            $valid = true;
+            if( $comment->comment_approved == 'spam' ) {
+                $valid = false;
+            }
+            if( $this->options['only_submit_approved'] == true ) {
+                if( $comment->comment_approved != 1 ) {
+                    $valid = false;
+                }
+            }
+            if( $valid === true ) {
                 wp_remote_fopen( $this->url . '?api_key=' . $this->handshake . '&emails=' . $comment->comment_author_email );
             }
+        }
+    }
+    
+    function wp_set_comment_status( $id, $status ) {
+        $comment = get_comment( $id );
+        if( in_array( $status, array( 'approve', '1' ) ) ) {
+            wp_remote_fopen( $this->url . '?api_key=' . $this->handshake . '&emails=' . $comment->comment_author_email );
         }
     }
 }

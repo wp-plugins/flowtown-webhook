@@ -33,10 +33,16 @@ Yes, but with some caveats. There should be no problem with Intense Debate since
 
 == Upgrade Notice ==
 
+= 1.2 =
+* Added ability to only send approved commenters to Flowtown
+
 = 1.1 =
 * Ability to add commenters to your Flowtown account added
 
 == Changelog ==
+
+= 1.2 =
+* Added ability to only send approved commenters to Flowtown (spam commenters will always be filtered out). This is a user specifiable option.
 
 = 1.1 =
 * Added ability to send blog commenters to Flowtown
